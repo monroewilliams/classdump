@@ -1,7 +1,9 @@
 
 This tool uses the Objective-C runtime APIs to dump information about Objective-C classes that are visible to it.
 
-To explore the classes in a framework, you need to link against the target framework at build time.
+To explore the classes in a framework or bundle, you need to either link against the target framework at build time, or use the `-L` argument with a full path to a file (either the .dylib or the object file within the framework or plugin bundle). 
+
+Note that when you supply a file in `-L` argument the symbols in the loaded library will be added to the global namespace, so you will still need to supply an appropriate filter argument if you don't want to see every symbol in existence.
 
 Its outout is an approximation of what you'd need to put in a header file to be able to reference the target class.
 
@@ -155,6 +157,41 @@ $ ./classdump ScreenSaverView ScreenSaverViewController
 - (void)setInitialAnimationState:(bool)param0 
 // Class Methods (0):
 @end 
+
+$ ./classdump -L /System/Library/ExtensionKit/Extensions/Flurry.appex/Contents/MacOS/Flurry -l '*Flurry*'
+_TtC6FlurryP33_3703B36C8BDA00798659906BE625896D19ResourceBundleClass
+AppleFlurry
+Flurry.FlurryExtension
+Flurry.FlurryConfigurationViewController
+Flurry.FlurryViewController
+AppleFlurryView
+AppleFlurryOpenGLView
+
+$ ./classdump -L /System/Library/ExtensionKit/Extensions/Flurry.appex/Contents/MacOS/Flurry 'AppleFlurryView'
+@interface AppleFlurryView : ScreenSaverView {
+// Ivars (5):
+    AppleFlurryOpenGLView* _glView; // offset 592
+    NSMutableArray* _flurries; // offset 600
+    NSLock* _bgLock; // offset 608
+    float _oldFrameTime; // offset 616
+    bool _initTexture; // offset 620
+}
+// Properties (0):
+// Class Properties (0):
+// Methods (10):
+- (id)initWithFrame:(CGRect)param0 isPreview:(bool)param1;
+- (void)dealloc;
+- (void)setFrameSize:(CGSize)param0;
+- (void)drawRect:(CGRect)param0;
+- (void)prepareToAnimate;
+- (void)animateOneFrame;
+- (void)reloadDefaults:(id)param0;
+- (void)gl_init;
+- (void)gl_display;
+- (void)gl_reshape:(double)param0 :(double)param1;
+// Class Methods (1):
++ (void)initialize;
+
 ```
 
 Invoking the command with the `-a` flag will cause each method definition to include a comment with an lldb command 

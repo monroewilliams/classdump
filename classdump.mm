@@ -13,6 +13,7 @@
 #include <list>
 #include <format>
 #include <fnmatch.h>
+#include <dlfcn.h>
 
 std::string join(const std::list<std::string> list, std::string_view sep) {
     std::string result;
@@ -342,6 +343,13 @@ int main(int argc, const char * argv[]) {
         std::string arg(argv[i]);
         if (arg == "-l") {
             list = true;
+            continue;
+        }
+        if (arg == "-L") {
+            // The next argument should be the full path to a shared library. Load it.
+            i++;
+            if (i >= argc) continue;
+            auto handle = dlopen(argv[i], RTLD_LAZY);
             continue;
         }
         if (arg == "-a") {
