@@ -14,6 +14,17 @@
 #include <format>
 #include <fnmatch.h>
 
+std::string join(const std::list<std::string> list, std::string_view sep) {
+    std::string result;
+    bool first = true;
+    for (const auto &s : list) {
+        if (!first) result += sep;
+        result += s;
+        first = false;
+    }
+    return result;
+}
+
 bool gMethodAddresses = false;
 
 // https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html#//apple_ref/doc/uid/TP40008048-CH100-SW1
@@ -125,14 +136,7 @@ void dumpProperties(objc_property_t *list, int count, id instance = nil, std::st
         }
         std::string attributesString;
         if (attributes.size() > 0) {
-            attributesString = "(";
-            bool first = true;
-            for (const auto &s : attributes) {
-                if (!first) attributesString += ", ";
-                attributesString += s;
-                first = false;
-            }
-            attributesString += ") ";
+            attributesString = std::format("({}) ", join(attributes, ", "));
         }
         std::cout << std::format("{}@property {}{} {};", prefix, attributesString, type, name) << std::endl;
         
@@ -161,25 +165,27 @@ void dumpMethods(Method *list, int count, std::string_view prefix = "-") {
 
         std::cout << std::format("{} ({})", prefix, mapTypeEncoding(returnType));
         // Interleave the arguments with the components of the selector name.
+        std::list<std::string> argumentStrings;
         size_t len = name.size();
         size_t mark = name.find(':');
         int paramNumber = 0;
         if (mark == std::string::npos) {
             // Selector with no arguments. Just output it whole.
-            std::cout << name;
+            argumentStrings.push_back(name);
         } else {
             // There's at least one argument. Interleave types.
             auto iter = args.begin();
             size_t start = 0;
             do {
-                std::cout << std::format("{}({})param{}{}", name.substr(start, mark + 1 - start), mapTypeEncoding(*iter), paramNumber, mark + 1 < len?" ":"");
-                start = mark + 1; 
+                argumentStrings.push_back(std::format("{}({})param{}", name.substr(start, mark + 1 - start), mapTypeEncoding(*iter), paramNumber));
+                start = mark + 1;
                 mark = name.find(':', start);
                 iter++;
                 paramNumber++;
             } while (mark != std::string::npos);
         }
-        std::cout << ";";
+        std::cout << join(argumentStrings, " ") << ";";
+        
         if (gMethodAddresses) {
             std::cout << "  // image lookup -v --address " << (void*)method_getImplementation(m);
         }
@@ -214,13 +220,11 @@ void dumpClass(Class c)
     unsigned int protocolCount = 0;
     auto protocols = class_copyProtocolList(c, &protocolCount);
     if ( protocolCount > 0) {
-        bool first = true;
-        std::cout << " <";
+        std::list<std::string> protocolList;
         for (int i = 0; i < protocolCount; i++) {
-            std::cout << std::format("{}{}", first?"":", ", protocol_getName(protocols[i]));
-            first = false;
+            protocolList.push_back(protocol_getName(protocols[i]));
         }
-        std::cout << ">";
+        std::cout << std::format(" <{}>", join(protocolList, ", "));
     }
     free(protocols);
     
