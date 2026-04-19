@@ -49,6 +49,8 @@ std::string mapTypeEncoding(std::string_view s) {
         }
         break;
         //bnum A bit field of num bits
+        // bitfieldTypeEncoding will return a non-empty string for this case
+        case 'b': return "unsigned";
         // ^type A pointer to type
         case '^': 
             return std::format("{}*", mapTypeEncoding(s.substr(1)));
@@ -71,14 +73,22 @@ std::string mapTypeEncoding(std::string_view s) {
     return std::string(s);
 }
 
+std::string bitfieldTypeEncoding(std::string_view s) {
+    switch(s[0]) {
+        case 'b': 
+            return std::format(" : {}", s.substr(1));
+        default: break;
+    }
+    return "";
+}
+
 void dumpIvars(Ivar *list, int count, std::string_view prefix = "    ") {
     for (int i = 0; i < count; i++) {
         const char * name = ivar_getName(list[i]); 
         const char * typeEncoding = ivar_getTypeEncoding(list[i]); 
         // We're going to assume the array is in layout order, but will put the offset in a comment.
         ptrdiff_t offset = ivar_getOffset(list[i]);
-        std::cout << std::format("{}{} {}; // offset {}", prefix, mapTypeEncoding(typeEncoding), name, offset) << std::endl;
-
+        std::cout << std::format("{}{} {}{}; // offset {}", prefix, mapTypeEncoding(typeEncoding), name, bitfieldTypeEncoding(typeEncoding), offset) << std::endl;
     }
 }
 
