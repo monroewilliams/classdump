@@ -194,9 +194,6 @@ $ ./classdump -L /System/Library/ExtensionKit/Extensions/Flurry.appex/Contents/M
 
 ```
 
-Invoking the command with the `-a` flag will cause each method definition to include a comment with an lldb command 
-you can use to get information about the implementation method address, including what library it's located in.
-
-The easiest way to make use of this is to run the tool under the debugger, set a breakpoint at the end of main(),
-and copy/paste the `image lookup` command from the output into the debugger console when you stop at the breakpoint.
+Invoking the command with the `-a` flag will cause each method definition to include a comment with an the address
+of the function implementing the method, and the path to the library that contains it.
 

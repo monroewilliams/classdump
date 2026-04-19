@@ -14,6 +14,8 @@
 #include <format>
 #include <fnmatch.h>
 #include <dlfcn.h>
+#include <mach-o/dyld.h>
+#include <mach-o/nlist.h>
 
 std::string join(const std::list<std::string> list, std::string_view sep) {
     std::string result;
@@ -188,7 +190,14 @@ void dumpMethods(Method *list, int count, std::string_view prefix = "-") {
         std::cout << join(argumentStrings, " ") << ";";
         
         if (gMethodAddresses) {
-            std::cout << "  // image lookup -v --address " << (void*)method_getImplementation(m);
+            auto implAddr = method_getImplementation(m);
+            // If you paste this into lldb, it can give even more info.
+//            std::cout << "  // image lookup -v --address " << implAddr;
+            Dl_info info;
+            if (dladdr((const void*)implAddr, &info)) {
+                std::cout << std::format("  //  {} -> {}", (void*)implAddr, info.dli_fname);
+            }
+
         }
         std::cout << std::endl; 
     }
