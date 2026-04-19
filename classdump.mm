@@ -14,6 +14,8 @@
 #include <format>
 #include <fnmatch.h>
 
+bool gMethodAddresses = false;
+
 // https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html#//apple_ref/doc/uid/TP40008048-CH100-SW1
 std::string mapTypeEncoding(std::string_view s) {
     switch(s[0]) {
@@ -151,6 +153,7 @@ void dumpMethods(Method *list, int count, std::string_view prefix = "-") {
         // Interleave the arguments with the components of the selector name.
         size_t len = name.size();
         size_t mark = name.find(':');
+        int paramNumber = 0;
         if (mark == std::string::npos) {
             // Selector with no arguments. Just output it whole.
             std::cout << name;
@@ -159,13 +162,18 @@ void dumpMethods(Method *list, int count, std::string_view prefix = "-") {
             auto iter = args.begin();
             size_t start = 0;
             do {
-                std::cout << std::format("{}({}){}", name.substr(start, mark + 1 - start), mapTypeEncoding(*iter), mark + 1 < len?" ":"");
+                std::cout << std::format("{}({})param{}{}", name.substr(start, mark + 1 - start), mapTypeEncoding(*iter), paramNumber, mark + 1 < len?" ":"");
                 start = mark + 1; 
                 mark = name.find(':', start);
                 iter++;
+                paramNumber++;
             } while (mark != std::string::npos);
         }
-        std::cout << ";  // image lookup -v --address " << (void*)method_getImplementation(m) << std::endl; 
+        std::cout << ";";
+        if (gMethodAddresses) {
+            std::cout << "  // image lookup -v --address " << (void*)method_getImplementation(m);
+        }
+        std::cout << std::endl; 
     }
 }
 
@@ -320,6 +328,10 @@ int main(int argc, const char * argv[]) {
         std::string arg(argv[i]);
         if (arg == "-l") {
             list = true;
+            continue;
+        }
+        if (arg == "-a") {
+            gMethodAddresses = true;
             continue;
         }
         if (list) {

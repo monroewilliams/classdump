@@ -92,44 +92,44 @@ $ ./classdump ScreenSaverView ScreenSaverViewController
 @property (class, readonly) NSWindow* configureSheet;
 @property (class, readonly, getter=isPreview) bool preview;
 // Methods (33):
-- (bool)isAnimating;  // image lookup -v --address 0x1db964728
-- (bool)isPreview;  // image lookup -v --address 0x1db966e00
-- (void)drawRect:(CGRect);  // image lookup -v --address 0x1db96473c
-- (void)startAnimation;  // image lookup -v --address 0x1db9659e0
-- (id)delegate;  // image lookup -v --address 0x1db966f24
-- (id)accessibilityRole;  // image lookup -v --address 0x1db966e48
-- (void)stopAnimation;  // image lookup -v --address 0x1db965d2c
-- (id)accessibilityTitle;  // image lookup -v --address 0x1db966e7c
-- (void).cxx_destruct;  // image lookup -v --address 0x1db966f48
-- (void)setDelegate:(id);  // image lookup -v --address 0x1db966f34
-- (bool)clipsToBounds;  // image lookup -v --address 0x1db9667b0
-- (id)initWithFrame:(CGRect);  // image lookup -v --address 0x1db9667a0
-- (bool)isAccessibilityElement;  // image lookup -v --address 0x1db966e40
-- (void)dealloc;  // image lookup -v --address 0x1db9667b8
-- (bool)acceptsFirstMouse:(id);  // image lookup -v --address 0x1db9667a8
-- (void)setIsAnimating:(bool);  // image lookup -v --address 0x1db966914
-- (void)setPreview:(bool);  // image lookup -v --address 0x1db966e28
-- (void)_resetTimer;  // image lookup -v --address 0x1db965a58
-- (void)animateOneFrame;  // image lookup -v --address 0x1db966d9c
-- (void)displayMessage:(id);  // image lookup -v --address 0x1db966da0
-- (bool)_needsAnimationTimer;  // image lookup -v --address 0x1db966864
-- (void)_oneStep:(id);  // image lookup -v --address 0x1db966928
-- (double)animationTimeInterval;  // image lookup -v --address 0x1db965b60
-- (id)configureSheet;  // image lookup -v --address 0x1db966df8
-- (bool)hasConfigureSheet;  // image lookup -v --address 0x1db966df0
-- (bool)hidEvent:(id);  // image lookup -v --address 0x1db966e38
-- (id)initWithFrame:(CGRect) isPreview:(bool);  // image lookup -v --address 0x1db9644ec
-- (bool)isKeyboardInteractive;  // image lookup -v --address 0x1db966580
-- (bool)isMouseInteractive;  // image lookup -v --address 0x1db966588
-- (void)prepareToAnimate;  // image lookup -v --address 0x1db966d98
-- (id)screenSaverModule;  // image lookup -v --address 0x1db966e10
-- (void)setAnimationTimeInterval:(double);  // image lookup -v --address 0x1db965884
-- (void)setScreenSaverModule:(id);  // image lookup -v --address 0x1db9658a8
+- (bool)isAnimating
+- (bool)isPreview
+- (void)drawRect:(CGRect)param0 
+- (void)startAnimation
+- (id)delegate
+- (id)accessibilityRole
+- (void)stopAnimation
+- (id)accessibilityTitle
+- (void).cxx_destruct
+- (void)setDelegate:(id)param0 
+- (bool)clipsToBounds
+- (id)initWithFrame:(CGRect)param0 
+- (bool)isAccessibilityElement
+- (void)dealloc
+- (bool)acceptsFirstMouse:(id)param0 
+- (void)setIsAnimating:(bool)param0 
+- (void)setPreview:(bool)param0 
+- (void)_resetTimer
+- (void)animateOneFrame
+- (void)displayMessage:(id)param0 
+- (bool)_needsAnimationTimer
+- (void)_oneStep:(id)param0 
+- (double)animationTimeInterval
+- (id)configureSheet
+- (bool)hasConfigureSheet
+- (bool)hidEvent:(id)param0 
+- (id)initWithFrame:(CGRect)param0  isPreview:(bool)param1 
+- (bool)isKeyboardInteractive
+- (bool)isMouseInteractive
+- (void)prepareToAnimate
+- (id)screenSaverModule
+- (void)setAnimationTimeInterval:(double)param0 
+- (void)setScreenSaverModule:(id)param0 
 // Class Methods (4):
-+ (unsigned long)backingStoreType;  // image lookup -v --address 0x1db96634c
-+ (bool)performGammaFade;  // image lookup -v --address 0x1db966344
-+ (bool)performGammaFadeForModuleWithPath:(id);  // image lookup -v --address 0x1db966340
-+ (bool)spansScreens;  // image lookup -v --address 0x1db9663c4
++ (unsigned long)backingStoreType
++ (bool)performGammaFade
++ (bool)performGammaFadeForModuleWithPath:(id)param0 
++ (bool)spansScreens
 @end 
 
 @interface ScreenSaverViewController : NSServiceViewController {
@@ -144,22 +144,21 @@ $ ./classdump ScreenSaverView ScreenSaverViewController
 @property (class) bool initialAnimationState;
 @property (class) bool didFirstResize;
 // Methods (9):
-- (void)startAnimation;  // image lookup -v --address 0x1db96ba44
-- (void)stopAnimation;  // image lookup -v --address 0x1db96bb40
-- (void)invalidate;  // image lookup -v --address 0x1db96b7ac
-- (unsigned long)awakeFromRemoteView;  // image lookup -v --address 0x1db96b700
-- (bool)remoteViewSizeChanged:(CGSize) transaction:(id);  // image lookup -v --address 0x1db96b804
-- (bool)didFirstResize;  // image lookup -v --address 0x1db96bc60
-- (bool)initialAnimationState;  // image lookup -v --address 0x1db96bc3c
-- (void)setDidFirstResize:(bool);  // image lookup -v --address 0x1db96bc74
-- (void)setInitialAnimationState:(bool);  // image lookup -v --address 0x1db96bc50
+- (void)startAnimation
+- (void)stopAnimation
+- (void)invalidate
+- (unsigned long)awakeFromRemoteView
+- (bool)remoteViewSizeChanged:(CGSize)param0  transaction:(id)param1 
+- (bool)didFirstResize
+- (bool)initialAnimationState
+- (void)setDidFirstResize:(bool)param0 
+- (void)setInitialAnimationState:(bool)param0 
 // Class Methods (0):
 @end 
-
 ```
 
-Method descriptions include a comment with an lldb command you can use to get information about the implementation method,
-including what library it's located in.
+Invoking the command with the `-a` flag will cause each method definition to include a comment with an lldb command 
+you can use to get information about the implementation method address, including what library it's located in.
 
 The easiest way to make use of this is to run the tool under the debugger, set a breakpoint at the end of main(),
 and copy/paste the `image lookup` command from the output into the debugger console when you stop at the breakpoint.
