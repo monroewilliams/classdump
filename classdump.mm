@@ -16,6 +16,7 @@
 #include <dlfcn.h>
 #include <mach-o/dyld.h>
 #include <mach-o/nlist.h>
+#include <mach-o/loader.h>
 
 std::string join(const std::list<std::string> list, std::string_view sep) {
     std::string result;
@@ -169,7 +170,6 @@ void dumpMethods(Method *list, int count, std::string_view prefix = "-") {
         std::cout << std::format("{} ({})", prefix, mapTypeEncoding(returnType));
         // Interleave the arguments with the components of the selector name.
         std::list<std::string> argumentStrings;
-        size_t len = name.size();
         size_t mark = name.find(':');
         int paramNumber = 0;
         if (mark == std::string::npos) {
@@ -267,7 +267,6 @@ void dumpClass(Class c)
     dumpMethods(methodList, count, "+");
     free(methodList);
 
-
 //    ivarList = class_copyIvarList(mc, &count); 
 //    std::cout << "// Class Ivars (" << count << "):" << std::endl;
 //    dumpIvars(ivarList, count);
@@ -344,10 +343,101 @@ void listClassesMatching(const std::string_view &s) {
     }
 }
 
+int findImageIndex(std::string_view path) {
+    auto imageCount = _dyld_image_count();
+    
+    // The lib we just loaded is likely to be the last one, so start from the end and work backwards.
+    for (int i = imageCount - 1; i >= 0; i--) {
+        auto imagePath = _dyld_get_image_name(i);
+        if (path == imagePath) {
+                return i;
+        }
+    }
+    return -1;
+}
+
+mach_header_64* findMachHeader(std::string_view path) {
+    auto imageIndex = findImageIndex(path);
+    if (imageIndex != -1) {
+        auto header = (mach_header_64 *)_dyld_get_image_header(imageIndex);
+        if (header->magic == MH_MAGIC_64)
+            return header;
+    }
+    return nullptr;
+}
+
+std::list<std::string> getImagePaths() {
+    std::list<std::string> result;
+    auto imageCount = _dyld_image_count();
+    
+    // The lib we just loaded is likely to be the last one, so start from the end and work backwards.
+    for (int i = 0; i < imageCount; i++) {
+        auto imagePath = _dyld_get_image_name(i);
+        result.push_back(imagePath);
+    }
+    return result;
+}
+
+std::list<std::string> getImageClassNames(std::string_view path) {
+    std::list<std::string> result;
+    auto header = findMachHeader(path);
+    if (header != nullptr) {
+        // The load commands are immediately after the header.
+        uint8_t *p = (uint8_t*)&(header[1]);
+        for (int cmdIndex = 0; cmdIndex < header->ncmds; cmdIndex++) {
+            load_command *command = (load_command*)p;
+//            std::cout << std::format("  load command {:#X}", command->cmd) << std::endl;
+            switch(command->cmd) {
+                case LC_SEGMENT_64:
+                {
+                    segment_command_64 *segment = (segment_command_64*)p;
+//                    std::cout << std::format("    segment name: {}, segment count = {}", segment->segname, segment->nsects) << std::endl;
+                    if (segment->nsects > 0) {
+                        section_64 *section = (section_64 *)&(segment[1]);
+                        for (int sectionIndex = 0; sectionIndex < segment->nsects; sectionIndex++) {
+                            // sectname is 16 bytes, and may not be null terminated if there's not room.
+                            std::string sectionName(section->sectname, sizeof(section->sectname));
+//                            std::cout << std::format("        section name: {}", sectionName) << std::endl;
+                            
+                            // This works sometimes, but other times it seems to contain garbage.
+                            if (sectionName == "__objc_classname") {
+//                                std::cout << std::format("        Found _objc_classname section") << std::endl;
+                                // This is a blob of null-terminated class name strings.
+                                // it seems that names may be separated by multiple '\0' characters,
+                                // so we need to scan across them to find all the names.
+                                std::string classNameBlob(section->offset + (const char*)header, section->size);
+                                for (size_t i = 0; i < classNameBlob.size();) {
+                                    size_t j = classNameBlob.find('\0', i);
+                                    if (j == std::string::npos) break;
+                                    if (j > i) {
+//                                        std::cout << std::format("        {}", classNameBlob.substr(i, j - i)) << std::endl;
+                                        result.push_back(std::string(classNameBlob.substr(i, j - i)));
+                                    }
+                                    i = j + 1;
+                                }
+                            }
+                            if (sectionName == "__objc_classlist") {
+//                                std::cout << std::format("        Found __objc_classlist section") << std::endl;
+                            }
+                            section++;
+                        }
+                    }
+                }
+                break;
+                default:
+                break;
+            }
+            p += command->cmdsize;
+        }
+    }
+    
+    return result;
+}
 
 int main(int argc, const char * argv[]) {
 
     bool list = false;
+    int displayedCount = 0;
     for (int i = 1; i < argc; i++) {
         std::string arg(argv[i]);
         if (arg == "-l") {
@@ -358,7 +448,14 @@ int main(int argc, const char * argv[]) {
             // The next argument should be the full path to a shared library. Load it.
             i++;
             if (i >= argc) continue;
-            auto handle = dlopen(argv[i], RTLD_LAZY);
+            dlopen(argv[i], RTLD_LAZY);
+            if (list) {
+                auto names = getImageClassNames(argv[i]);
+                for (const auto &name : names) {
+                    std::cout << name << std::endl;
+                }
+                displayedCount++;
+            }
             continue;
         }
         if (arg == "-a") {
@@ -369,6 +466,15 @@ int main(int argc, const char * argv[]) {
             listClassesMatching(arg);
         } else {
             dumpClassesMatching(arg);
+        }
+        displayedCount++;
+    }
+    
+    if (list && displayedCount == 0) {
+        // Nothing was displayed. Display the list of image paths.
+        auto paths = getImagePaths();
+        for (const auto &path : paths) {
+            std::cout << path << std::endl;
         }
     }
 
