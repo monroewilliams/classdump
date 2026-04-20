@@ -5,6 +5,12 @@ To explore the classes in a framework or bundle, you need to either link against
 
 Note that when you supply a file in `-L` argument the symbols in the loaded library will be added to the global namespace, so you will still need to supply an appropriate filter argument if you don't want to see every symbol in existence.
 
+If the -l argment proceeds a -L argument, it will attempt to extract the list of class names (contents of the __objc_classname section) from the loaded image and display it.
+
+Loading an object file with -A instead of -L will attempt to dump all classes found in the __objc_classname section of the object file.
+
+If the -l argument is given but nothing else is displayed, it will display the paths of all loaded libraries.
+
 Its outout is an approximation of what you'd need to put in a header file to be able to reference the target class.
 
 Some examples:
