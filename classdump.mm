@@ -206,7 +206,9 @@ void dumpMethods(Method *list, int count, std::string_view prefix = "-") {
 void dumpClass(Class c)
 {
     if (c == nil) {
-        std::cout << "Class pointer is nil" << std::endl;
+        std::cout << "// Class pointer is nil" << std::endl;
+        std::cout << std::endl;
+        return;
     }
 
     unsigned int count = 0;
@@ -276,12 +278,16 @@ void dumpClass(Class c)
     std::cout << std::endl;
 }
 
-void dumpClass(const char *className)
+void dumpClass(std::string_view className)
 {
+    Class c = objc_getClass(std::string(className).c_str());
+    if (c == nil)
+    {
+        return;
+    }
     std::cout << "// ================== " << std::endl;
     std::cout << "// " << className << std::endl;
 
-    Class c = objc_getClass(className);
     dumpClass(c);
 }
 
@@ -444,15 +450,20 @@ int main(int argc, const char * argv[]) {
             list = true;
             continue;
         }
-        if (arg == "-L") {
+        if (arg == "-L" || arg == "-A") {
+            bool dumpAll = (arg == "-A");
             // The next argument should be the full path to a shared library. Load it.
             i++;
             if (i >= argc) continue;
             dlopen(argv[i], RTLD_LAZY);
-            if (list) {
+            if (list || dumpAll) {
                 auto names = getImageClassNames(argv[i]);
                 for (const auto &name : names) {
-                    std::cout << name << std::endl;
+                    if (dumpAll) {
+                        dumpClass(name);
+                    } else if (list) {
+                        std::cout << name << std::endl;
+                    }
                 }
                 displayedCount++;
             }
